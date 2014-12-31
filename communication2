@@ -1,0 +1,35 @@
+#include<glib.h>
+#include<dbus/dbus-glib.h>
+#include<stdio.h>
+static gboolen send_ding(DBusConnection *bus);
+int main()
+{
+   GMainLoop *loop;
+   DBusConnect *bus;
+   DBusError error;
+   loop = g_main_loop_new(NULL,FALSE);
+   dbus_error_init (&error);
+   
+   bus = dbus_bus_get(DBUS_BUS_SESSION,&error);
+   if (!bus){
+   q_warning("連接到D-Bus失敗:%s",error.message);
+   
+   dbus_error_free(&error);
+   return 1;
+   }
+
+   dbus_connection_setup_with_g_main(bus,NULL);
+   g_timeout_add(1000,(GSourceFunc))send_ding,bus);
+   g_main_loop_run(loop);
+   return 0;
+}
+
+static gboolen send_ding(DBusConnection *bus)
+{
+   DBusMessage *message;
+   message = dbus_message_new_signal("/com/burtonini/dbus/ding","com.burtonini.dbus.Singal","ding");
+   dbus_connection_send(bus,message,NULL);
+   dbus_message_unref(message);
+   g_print("ding!\n");
+   return TRUE;
+}
